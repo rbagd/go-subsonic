@@ -2,10 +2,17 @@ package subsonic
 
 import (
 	"context"
+	"errors"
+	"io"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 )
+
+type roundTripperFunc func(*http.Request) (*http.Response, error)
+
+func (f roundTripperFunc) RoundTrip(r *http.Request) (*http.Response, error) { return f(r) }
 
 func TestGetIndexes(t *testing.T) {
 	// Mock Server
@@ -78,5 +85,46 @@ func TestGetMusicDirectory(t *testing.T) {
 	}
 	if dir.Child[0].Title != "Dancing Queen" {
 		t.Errorf("Expected title Dancing Queen, got %s", dir.Child[0].Title)
+	}
+}
+
+func TestClientUsesInjectedHTTPClient(t *testing.T) {
+	t.Parallel()
+
+	var calls int
+	rt := roundTripperFunc(func(r *http.Request) (*http.Response, error) {
+		calls++
+		body := `{"subsonic-response":{"status":"ok","version":"1.16.1"}}`
+		return &http.Response{
+			StatusCode: http.StatusOK,
+			Status:     "200 OK",
+			Header:     http.Header{"Content-Type": []string{"application/json"}},
+			Body:       io.NopCloser(strings.NewReader(body)),
+			Request:    r,
+		}, nil
+	})
+
+	client := NewClient("http://should-not-hit-network.invalid", "user", "pass")
+	client.HTTPClient = &http.Client{Transport: rt}
+
+	if err := client.Ping(context.Background()); err != nil {
+		t.Fatalf("Ping() error = %v, want nil", err)
+	}
+	if calls != 1 {
+		t.Fatalf("HTTP transport calls = %d, want 1", calls)
+	}
+}
+
+func TestNewRequestReturnsErrorWhenSaltGenerationFails(t *testing.T) {
+	origGenerateSalt := generateSalt
+	t.Cleanup(func() { generateSalt = origGenerateSalt })
+
+	generateSalt = func(n int) (string, error) {
+		return "", errors.New("rng unavailable")
+	}
+
+	client := NewClient("http://example.com", "user", "pass")
+	if err := client.Ping(context.Background()); err == nil {
+		t.Fatalf("Ping() error = nil, want non-nil")
 	}
 }

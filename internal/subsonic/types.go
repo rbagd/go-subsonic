@@ -1,13 +1,26 @@
 package subsonic
 
 type Indexes struct {
-	LastModified int64    `json:"lastModified"`
-	IgnoredArticles string `json:"ignoredArticles"`
-	Index        []Index  `json:"index"`
+	LastModified    int64   `json:"lastModified"`
+	IgnoredArticles string  `json:"ignoredArticles"`
+	Index           []Index `json:"index"`
 }
 
 type ArtistsID3 struct {
 	Index []Index `json:"index"`
+}
+
+type AlbumList2 struct {
+	Album []AlbumID3 `json:"album"`
+}
+
+type AlbumID3 struct {
+	ID         string `json:"id"`
+	Name       string `json:"name"`
+	Title      string `json:"title,omitempty"`
+	Artist     string `json:"artist"`
+	ArtistName string `json:"artistName,omitempty"`
+	Year       int    `json:"year,omitempty"`
 }
 
 type Index struct {
@@ -16,18 +29,18 @@ type Index struct {
 }
 
 type Artist struct {
-	ID        string `json:"id"`
-	Name      string `json:"name"`
-	CoverArt  string `json:"coverArt"`
-	AlbumCount int   `json:"albumCount"`
-	Starred   string `json:"starred,omitempty"` // timestamp
+	ID         string `json:"id"`
+	Name       string `json:"name"`
+	CoverArt   string `json:"coverArt"`
+	AlbumCount int    `json:"albumCount"`
+	Starred    string `json:"starred,omitempty"` // timestamp
 }
 
 type Directory struct {
-	ID       string  `json:"id"`
-	Parent   string  `json:"parent,omitempty"`
-	Name     string  `json:"name"`
-	Child    []Child `json:"child"`
+	ID     string  `json:"id"`
+	Parent string  `json:"parent,omitempty"`
+	Name   string  `json:"name"`
+	Child  []Child `json:"child"`
 }
 
 type Child struct {
