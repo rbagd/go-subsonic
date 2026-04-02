@@ -1,0 +1,19 @@
+# Compiled binaries
+/go-subsonic
+/main
+
+# Local configuration
+/config.yaml
+
+# Beads local files (keep issues.jsonl and metadata.json tracked)
+.beads/beads.db
+.beads/last-touched
+.beads/config.yaml
+
+# bv (beads viewer) local config and caches
+.bv/
+
+# Go related
+vendor/
+*.test
+*.out
