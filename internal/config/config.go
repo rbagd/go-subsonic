@@ -23,31 +23,36 @@ type PlayerConfig struct {
 	BufferSize int `mapstructure:"buffer_size"`
 }
 
-func Load() (*Config, error) {
-	viper.SetConfigName("config")
-	viper.SetConfigType("yaml")
+func loadFromViper(v *viper.Viper) (*Config, error) {
+	v.SetDefault("player.buffer_size", 10)
 
-	// Search paths
-	viper.AddConfigPath(".")
-	
-	home, err := os.UserHomeDir()
-	if err == nil {
-		viper.AddConfigPath(filepath.Join(home, ".config", "go-subsonic"))
+	var cfg Config
+	if err := v.Unmarshal(&cfg); err != nil {
+		return nil, err
 	}
 
-	viper.SetDefault("player.buffer_size", 10)
+	return &cfg, nil
+}
 
-	if err := viper.ReadInConfig(); err != nil {
+func Load() (*Config, error) {
+	v := viper.New()
+	v.SetConfigName("config")
+	v.SetConfigType("yaml")
+
+	// Search paths
+	v.AddConfigPath(".")
+
+	home, err := os.UserHomeDir()
+	if err == nil {
+		v.AddConfigPath(filepath.Join(home, ".config", "go-subsonic"))
+	}
+
+	if err := v.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
 			return nil, fmt.Errorf("config file not found")
 		}
 		return nil, err
 	}
 
-	var cfg Config
-	if err := viper.Unmarshal(&cfg); err != nil {
-		return nil, err
-	}
-
-	return &cfg, nil
+	return loadFromViper(v)
 }
