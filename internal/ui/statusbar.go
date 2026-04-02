@@ -23,7 +23,7 @@ type StatusModel struct {
 func NewStatusModel(player AudioPlayer) StatusModel {
 	return StatusModel{
 		Player:      player,
-		CurrentSong: "None",
+		CurrentSong: "",
 		Volume:      0.0,
 	}
 }
@@ -63,6 +63,22 @@ func (m StatusModel) Update(msg tea.Msg) (StatusModel, tea.Cmd) {
 }
 
 func (m StatusModel) View() string {
+	renderWidth := m.Width - 2
+	if renderWidth < 0 {
+		renderWidth = 0
+	}
+
+	if m.Err != nil {
+		return panelStyle.
+			Width(renderWidth).
+			Height(3).
+			Render(fmt.Sprintf("\nError: %v\n", m.Err))
+	}
+
+	if m.CurrentSong == "" {
+		return ""
+	}
+
 	currentPos := time.Duration(0)
 	if m.Player != nil {
 		currentPos = m.Player.Position()
@@ -87,8 +103,8 @@ func (m StatusModel) View() string {
 	if m.CurrentYear != 0 {
 		albumStr = fmt.Sprintf("%s (%d)", m.CurrentAlbum, m.CurrentYear)
 	}
-	
-	line1 := fmt.Sprintf("%s%s", m.CurrentSong, trackStr)
+
+	line1 := fmt.Sprintf("%s%s", boldStyle.Render(m.CurrentSong), trackStr)
 	line2 := fmt.Sprintf("%s • %s", m.CurrentArtist, albumStr)
 	if m.CurrentArtist == "" && m.CurrentAlbum == "" {
 		line2 = "Unknown Artist • Unknown Album"
@@ -97,13 +113,9 @@ func (m StatusModel) View() string {
 
 	content := fmt.Sprintf("%s\n%s\n%s", line1, line2, line3)
 
-	if m.Err != nil {
-		content = fmt.Sprintf("Error: %v", m.Err)
-	}
-
 	// Height is now 3 lines of content + padding
 	return panelStyle.
-		Width(m.Width - 4).
+		Width(renderWidth).
 		Height(3).
 		Render(content)
 }
