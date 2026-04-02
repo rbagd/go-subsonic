@@ -10,8 +10,17 @@
 .beads/last-touched
 .beads/config.yaml
 
-# bv (beads viewer) local config and caches
-.bv/
+# Database
+*.db
+*.db-shm
+*.db-wal
+
+# Lock files
+*.lock
+
+# Temporary
+last-touched
+*.tmp
 
 # Go related
 vendor/

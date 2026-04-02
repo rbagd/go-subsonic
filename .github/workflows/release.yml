@@ -1,0 +1,42 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    name: Build and Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Needed for softprops/action-gh-release
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.25.6' # Matching the go.mod version
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libasound2-dev pkg-config
+
+      - name: Build binary
+        run: |
+          go build -v -o go-subsonic ./cmd/go-subsonic/main.go
+
+      - name: Package artifact
+        run: |
+          tar -czvf go-subsonic-${{ github.ref_name }}.tar.gz go-subsonic README.md
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: go-subsonic-${{ github.ref_name }}.tar.gz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
